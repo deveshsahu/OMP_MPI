@@ -1,0 +1,12 @@
+all:scan run
+
+CC=mpicc
+
+scan:scan.o genscan.o
+	@mpicc test.cpp -o search -fopenmp
+
+run:scan
+	@mpirun -np 2 search
+
+clean:
+	@/bin/rm -rf *.o	

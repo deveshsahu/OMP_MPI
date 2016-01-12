@@ -1,0 +1,77 @@
+#include <iostream>
+#include <cstdlib>
+#include <omp.h>
+#include <mpi.h>
+#include "bin_search.cpp"
+#include <sys/time.h>
+using namespace std;
+int rank;
+int compare (const void * a, const void * b){
+	double ua = *((double*)a);
+	double ub = *((double*)b);
+	if (ua>ub)
+	 return 1;
+	else 
+	 return -1;
+	}
+void sort(double* a,int n){
+	qsort(a,n,sizeof(double),compare);
+	}
+	
+int pow2(int n,int r){
+	int k=1;
+	for (int i = 1;i<=n;i++)
+		k *=r;
+	return k;
+	}
+int rec_pow2(int n,int r){
+	if (n==1)
+		return 1;
+	else
+		return r*rec_pow2(n-1,r);
+	}
+int bsearch(double *key, int num_keys, double *a,int n,MPI_Comm comm, int num_threads){
+	double t1,t2;
+	MPI_Comm_rank(comm, &rank);
+	if (rank==0)  t1= MPI_Wtime();
+	omp_set_num_threads(num_threads);
+	int j;
+for (int i = 0;i<num_keys;i++){
+	if(rank==0)
+			j=bin_search(key[i],&a[n/2],n/2,2);
+	else
+			j=bin_search(key[i],a,n/2,2);
+		}
+	if(rank==0){
+	  t2= MPI_Wtime();
+	   cout<<"\nElapsed time = "<<t2-t1<<endl;
+	   }
+	return j;
+	}
+	
+int main(int argc, char* argv[]){
+ int num_keys = 1,num_threads = 6;
+ int n = pow2(24,2);  
+ double *a = new double[n];
+ for (int i = 0;i<n;i++){
+	a[i] = i;
+	 }
+ sort(a,n);
+// for (int i = 0;i<n;i++) cout<<a[i]<<"\t";
+ double t1,t2;
+ double *key = new double[num_keys];
+ int seed = rand()%1000;
+ for (int i = 0; i<num_keys; ++i)
+ 	key[i] = i*seed%n;
+ struct timeval start,finish;
+ gettimeofday(&start,NULL);
+ MPI_Init(&argc,&argv);
+ MPI_Comm comm=MPI_COMM_WORLD;
+ 
+ int flag = bsearch(key,num_keys,a,n,comm,num_threads);
+ //cout<<"\nFlag value="<<flag;
+ MPI_Finalize();
+ gettimeofday(&finish,NULL);
+ time_elapsed = (finish.tv_sec-start.tv_sec) + (finish.tv_usec-start.tv_usec)*1e-6;
+ cout<<"\ntime= "<<time_elapsed;
+ }	

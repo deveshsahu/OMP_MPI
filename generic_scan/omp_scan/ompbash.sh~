@@ -1,0 +1,3 @@
+load module intel
+
+KMP_AFFINITY=compact OMP_NUM_THREADS=6 ./a.out   # all threads in one socket

@@ -1,0 +1,11 @@
+int bin_search(int key,double *a, int n, int p){
+	int b = n/p, j = 1;
+	#pragma omp for
+	for (int i = 1;i<=p;i++){
+		int flag = a[(i-1)*b]<=key && key< a[i*b-1];
+		if (flag)
+			j = bin_search(key, &a[(i-1)*b],n/p,p);
+		j += b*(i-1);
+		}
+	return j;
+}
